@@ -19,6 +19,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <string.h>
+#include <stdbool.h>
 
 
 
@@ -47,17 +48,34 @@ int main(int argc, char** argv) {
     int iterations = 100;
     int oflags = O_RDWR|O_CREAT;
     long long runtime = 0LL;
+    bool verbose = false;
+    bool sync_io = false;
     
     if(argc <= 1) {
     	printf("File IO benchmarking utility\n");
-    	printf("  Usage: %s FILE [BS] [ITERATIONS]\n\n", argv[0]);
+    	printf("  Usage: %s FILE [BS] [ITERATIONS] [OPTIONS]\n\n", argv[0]);
     	printf("  BS is the block size in bytes\n");
     	printf("  ITERATIONS the number of iterations\n");
+    	printf("  OPTIONS must be after BS and ITERATIONS and can be:\n");
+    	printf("  -v  --verbose          Verbose output\n");
+    	printf("  -s  --sync             Synchronous IO\n");
     	return EXIT_SUCCESS;
     }
     if(argc > 1) test_file = argv[1];
     if(argc > 2) bs = (size_t)atol(argv[2]);
     if(argc > 3) iterations = atoi(argv[3]);
+    for(int i=4; i<argc;i++) {		// Remaining options
+    	char *arg = argv[i];
+    	if(!strcmp("-s", arg) || !strcmp("--sync", arg) || !strcmp("--direct", arg)) {
+    		oflags |= O_SYNC;
+    		sync_io = true;
+		} else if(!strcmp("-v", arg) || !strcmp("--verbose", arg)) {
+			verbose = true;
+    	} else {
+    		fprintf(stderr, "Unknown argument %s\n", arg);
+    		return EXIT_FAILURE;
+    	}
+    }
     
     char* buf = (char*)malloc(sizeof(char)*bs);
     if(read_buf(buf, bs) != (ssize_t)bs) {
@@ -77,7 +95,7 @@ int main(int argc, char** argv) {
     	}
     	runtime += system_ms();
     	t_open += runtime;
-    	printf("  Open: %lld µs\n", runtime);
+    	if(verbose) printf("  Open: %lld µs\n", runtime);
     	
     	// Write some stuff
     	runtime = -system_ms();
@@ -87,7 +105,7 @@ int main(int argc, char** argv) {
     	}
     	runtime += system_ms();
     	t_write += runtime;
-    	printf("  Write: %lld µs\n", runtime);
+    	if(verbose) printf("  Write: %lld µs\n", runtime);
     	
     	runtime = -system_ms();
     	if(close(fd) != 0) {
@@ -96,11 +114,12 @@ int main(int argc, char** argv) {
     	}
     	runtime += system_ms();
     	t_close += runtime;
-    	printf("  Close: %lld µs\n", runtime);
+    	if(verbose) printf("  Close: %lld µs\n", runtime);
     }
     free(buf);
     
     printf("Statistics over %i iterations\n\n", iterations);
+    printf("  Synchronous IO: %s\n", (sync_io?"yes":"no"));
     t_open /= iterations; t_write /= iterations; t_close /= iterations;
     printf("  Open  : %ld µs\n", t_open);
     printf("  Write : %ld µs\n", t_write);
