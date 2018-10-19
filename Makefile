@@ -18,4 +18,5 @@ clean:
 iobench: iobench.c
 	$(CC) $(CC_FLAGS) -o $@ $<
 	
-
+install: iobench
+	install iobench /usr/local/bin/
