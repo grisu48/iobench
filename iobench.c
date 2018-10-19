@@ -118,7 +118,7 @@ int main(int argc, char** argv) {
     }
     free(buf);
     
-    printf("Statistics over %i iterations\n\n", iterations);
+    printf("Done: %i iterations, bs = %ld\n\n", iterations, bs);
     printf("  Synchronous IO: %s\n", (sync_io?"yes":"no"));
     t_open /= iterations; t_write /= iterations; t_close /= iterations;
     printf("  Open  : %ld µs\n", t_open);
