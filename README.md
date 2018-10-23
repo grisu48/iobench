@@ -6,10 +6,16 @@ The program iteratively opens a file, writes a number of random bytes and closes
 
 ## Build
 
-    compile:  gcc -Wall -Wextra -pedantic -std=c99 -o iobench iobench.c
+The program ships with a makefile
+
+    make -j2
 
 ## Run
 
-    ./iobench FILE [BS] [ITERATIONS]
+Use the help function of the program:
 
-`FILE` is just a simple test file, `BS` defined the block size in bytes, and `ITERATIONS` the number of iterations.
+    iobench2 -h
+
+Example usage: To write `8` blocks in the directory `/SCRATCH` with a block size of `4096` and by having `24` children in parallel:
+
+    iobench2 -b 4096 -f /SCRATCH -c 8 -C 24

@@ -65,7 +65,7 @@ static inline long min(const long x1, const long x2) { return (x1<x2)?x1:x2; }
 static inline long max(const long x1, const long x2) { return (x1>x2)?x1:x2; }
 
 static inline void print_stat(cstats_t *stat) {
-	printf("%8ld %8ld %8ld %8ld\n", stat->t_init, stat->t_open, stat->t_write, stat->t_close);
+	printf("%8ld %8ld %8ld %8ld µs\n", stat->t_init, stat->t_open, stat->t_write, stat->t_close);
 }
 
 static void kill_children() {
@@ -120,7 +120,7 @@ int main(int argc, char** argv) {
 	{
 		int c;
 		opterr = 0;
-		while ((c = getopt (argc, argv, "b:c:C:f:h")) != -1) {
+		while ((c = getopt (argc, argv, "b:c:C:f:hsq")) != -1) {
 			switch(c) {
 				case 'h':
 					printf("iobench2 - Small I/O Benchmarking utility\n");
@@ -257,7 +257,7 @@ int main(int argc, char** argv) {
 	    		b_read += s;
     		}
 	    	//printf("READ  %3d", i); print_stat(&stat);
-	    	if(!quiet) printf("  Child %3d: %8ld %8ld %8ld %8ld\n", i+1, stat.t_init, stat.t_open, stat.t_write, stat.t_close);
+	    	if(!quiet) printf("  Child %3d: %8ld %8ld %8ld %8ld µs\n", i+1, stat.t_init, stat.t_open, stat.t_write, stat.t_close);
 
 	    	if(i == 0) {
 	    		stat_min.t_init = stat.t_init;
@@ -286,16 +286,23 @@ int main(int argc, char** argv) {
 
 	    runtime = +system_us();
 
-	    if(!quiet) printf("\nOverall\n");
+	    if(!quiet) printf("\n  Overall         Init     Open     Write    Close   \n");
 	    if(!quiet) { printf("  Sum      : "); print_stat(&stat_sum); }
 	    printf("  Min      : "); print_stat(&stat_min);
 	    printf("  Max      : "); print_stat(&stat_max);
-	    printf("  Average  : %8ld %8ld %8ld %8ld\n", stat_sum.t_init/nproc, stat_sum.t_open/nproc, stat_sum.t_write/nproc, stat_sum.t_close/nproc);
+	    printf("  Average  : %8ld %8ld %8ld %8ld µs\n", stat_sum.t_init/nproc, stat_sum.t_open/nproc, stat_sum.t_write/nproc, stat_sum.t_close/nproc);
 
 	    long totalBytes = bs * count * nproc;
-	    printf("Total: %ld bytes in %ld ms (%0.2f kB/s)\n", totalBytes, runtime/1000L, (float)totalBytes/(runtime/1000.0F*1.024F));
-
-
+	    printf("Total: %ld bytes in %ld ms", totalBytes, runtime/1000L);
+	    float kBs = (float)totalBytes/(runtime/1000.0F*1.024F);
+	    if(kBs > 1024.0F*1024.0F) {
+	    	float gBs = kBs / (1024.0F*1024.0F);
+	    	printf(" (%0.2f GB/s)\n", gBs);
+	    } else if(kBs > 1024.0F) {
+	    	float mBs = kBs / (1024.0F);
+	    	printf(" (%0.2f MB/s)\n", mBs);
+	    } else 
+	    	printf(" (%0.2f kB/s)\n", kBs);
     }
 
 
