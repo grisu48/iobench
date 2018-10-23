@@ -209,6 +209,9 @@ int main(int argc, char** argv) {
 	    stat.t_open += system_us();
 	    if(fd < 0) {
 	    	fprintf(stderr, "Error opening file '%s': %s\n", filename, strerror(errno));
+	    	free(buf);
+	    	close(fd);
+	    		unlink(filename);
 	    	exit(EXIT_FAILURE);
 	    }
 
@@ -217,6 +220,9 @@ int main(int argc, char** argv) {
 	    for(int i=0;i<count;i++) {
 	    	if(write(fd, buf, bs) < 0) {
 	    		fprintf(stderr, "Error writing to file '%s': %s\n", filename, strerror(errno));
+	    		free(buf);
+	    		close(fd);
+	    		unlink(filename);
 	    		exit(EXIT_FAILURE);
 	    	}
 	    }
@@ -225,11 +231,14 @@ int main(int argc, char** argv) {
 	    stat.t_close = -system_us();
 	    close(fd);
 	    stat.t_close += system_us();
+	    unlink(filename);
 
 	    //printf("WRITE %3d", iWorker); print_stat(&stat);
-		write(pipes[iWorker][1], &stat, sizeof(stat));
+		if(write(pipes[iWorker][1], &stat, sizeof(stat)) < 0) {
+			fprintf(stderr, "Worker %d: Error writing to pipe: %s\n", iWorker, strerror(errno));
+			free(buf);
+		}
 	    free(buf);
-	    unlink(filename);
 	    exit(EXIT_SUCCESS);
     } else {
     	// Parent process waiting for children to exit
