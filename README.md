@@ -1,8 +1,12 @@
 # iobench
 
-Small open/write/close benchmarking utility.
+`iobench2` is a small open/write/close benchmarking utility for parallel writes on an arbitrary filesystem.
 
-The program iteratively opens a file, writes a number of random bytes and closes the file. It measures the microseconds the system needs for opening, writing and closing the file.
+The program forks `N` children, that each open a file, write `n` times a random block of bytes, close the file and report the stats to the parent process.
+The parent process collects the stats from all of the children and reports it to the user.
+
+I wrote this program to benchmark real world applications on a rather large filesystem, where multiple users and program access different filesystems randomly.
+
 
 ## Build
 
@@ -33,6 +37,3 @@ Example usage: To write `8` blocks in the directory `/SCRATCH` with a block size
       Average  :      138       47      223       27 µs
     Total: 131072 bytes in 162 ms (788.56 kB/s)
 
-## iobench
-
-`iobench` is a legacy tool and should not be used anymore.

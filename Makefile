@@ -12,14 +12,11 @@ CC_FLAGS=$(O_FLAGS) -std=c99
 
 # Default generic instructions
 default:	all
-all:	iobench iobench2
+all:	iobench2
 clean:
 	
-iobench: iobench.c
-	$(CC) $(CC_FLAGS) -o $@ $<
 iobench2: iobench2.c
 	$(CC) $(CC_FLAGS) -o $@ $< -D_POSIX_C_SOURCE -D_XOPEN_SOURCE
 	
 install: iobench
-	install iobench /usr/local/bin/
 	install iobench2 /usr/local/bin/
