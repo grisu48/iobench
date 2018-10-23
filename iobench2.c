@@ -54,12 +54,12 @@ static ssize_t fill_buf(void* buf, size_t size) {
 }
 
 /** Child stats */
-struct {
+typedef struct {
 	long t_init;
 	long t_open;
 	long t_write;
 	long t_close;
-} typedef cstats_t;
+} cstats_t;
 
 static inline long min(const long x1, const long x2) { return (x1<x2)?x1:x2; }
 static inline long max(const long x1, const long x2) { return (x1>x2)?x1:x2; }
@@ -106,13 +106,15 @@ static void sig_handler(int signo) {
 
 
 int main(int argc, char** argv) {
-    size_t bs = 512;			// Write block size
-    int count = 10;				// Number of subsequent writes in the file
-    char test_dir[1024];		// Test directory
-    bzero(test_dir, 1024);
+    size_t bs = 512;				// Write block size
+    int count = 10;					// Number of subsequent writes in the file
+    char test_dir[1024];			// Test directory
+    int oflags = O_RDWR|O_CREAT;	// Flags for file
+    bool quiet = false;				// Quiet mode
+
+	bzero(test_dir, 1024);
     strcpy(test_dir, ".");
-    // Flags for file
-    int oflags = O_RDWR|O_CREAT;
+    
 
 	// Parse program arguments
 	{
@@ -121,13 +123,19 @@ int main(int argc, char** argv) {
 		while ((c = getopt (argc, argv, "b:c:C:f:h")) != -1) {
 			switch(c) {
 				case 'h':
-					printf("iobench2 - I/O Benchmarking utility\n");
-					printf(" Usage: %s [OPTIONS]\n", argv[0]);
+					printf("iobench2 - Small I/O Benchmarking utility\n");
+					printf("  2018, Felix Niederwanger  || https://github.com/grisu48/iobench\n\n");
+					printf(" Usage: %s [OPTIONS]\n\n", argv[0]);
 					printf("OPTIONS:\n");
 					printf(" -b BYTES          Set block size\n");
 					printf(" -c COUNT          Set block numbers to write\n");
 					printf(" -C CHILDREN       Set number of children that work in parallel\n");
 					printf(" -f DIR            Directory prefix for test files\n");
+					printf(" -s                Synchronous IO\n");
+					printf(" -q                Quiet (only print stats)\n");
+					printf("\nThis software comes AS-IS with ABSOLUTELY NO GUARANTEES.");
+					printf("\nTake the results with a grain of salt\n");
+					printf("\n      And have fun! :-)\n");
 					exit(EXIT_SUCCESS);
 					break;
 				case 'b':
@@ -141,6 +149,12 @@ int main(int argc, char** argv) {
 					break;
 				case 'f':
 					strcpy(test_dir, optarg);
+					break;
+				case 's':
+					oflags |= O_SYNC;
+					break;
+				case 'q':
+					quiet = true;
 					break;
 			}
 		}
@@ -229,7 +243,7 @@ int main(int argc, char** argv) {
     	bzero(&stat_sum, sizeof(stat_sum));
     	bzero(&stat_min, sizeof(stat_min));
     	bzero(&stat_max, sizeof(stat_max));
-    	printf("                  Init     Open     Write    Close   \n");
+    	if(!quiet) printf("                  Init     Open     Write    Close   \n");
 	    for(int i=0;i<nproc;i++) {
     		cstats_t stat;
     		ssize_t b_read = 0;
@@ -243,7 +257,7 @@ int main(int argc, char** argv) {
 	    		b_read += s;
     		}
 	    	//printf("READ  %3d", i); print_stat(&stat);
-	    	printf("  Child %3d: %8ld %8ld %8ld %8ld\n", i+1, stat.t_init, stat.t_open, stat.t_write, stat.t_close);
+	    	if(!quiet) printf("  Child %3d: %8ld %8ld %8ld %8ld\n", i+1, stat.t_init, stat.t_open, stat.t_write, stat.t_close);
 
 	    	if(i == 0) {
 	    		stat_min.t_init = stat.t_init;
@@ -272,8 +286,8 @@ int main(int argc, char** argv) {
 
 	    runtime = +system_us();
 
-	    printf("\nOverall\n");
-	    printf("  Sum      : "); print_stat(&stat_sum);
+	    if(!quiet) printf("\nOverall\n");
+	    if(!quiet) { printf("  Sum      : "); print_stat(&stat_sum); }
 	    printf("  Min      : "); print_stat(&stat_min);
 	    printf("  Max      : "); print_stat(&stat_max);
 	    printf("  Average  : %8ld %8ld %8ld %8ld\n", stat_sum.t_init/nproc, stat_sum.t_open/nproc, stat_sum.t_write/nproc, stat_sum.t_close/nproc);
