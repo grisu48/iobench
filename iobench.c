@@ -3,7 +3,7 @@
  * Title:         
  * Author:        Felix Niederwanger
  * License:       Copyright (c), 2018 Felix Niederwanger
- *                MIT license (http://opensource.org/licenses/MIT)
+ *                Apache License (https://www.apache.org/licenses/LICENSE-2.0)
  * 
  *  compile:  gcc -Wall -Wextra -pedantic -std=c99 -o iobench iobench.c
  * 
