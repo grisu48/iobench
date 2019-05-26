@@ -1,5 +1,7 @@
 # iobench
 
+[![Build Status](https://travis-ci.org/grisu48/iobench.svg?branch=master)](https://travis-ci.org/grisu48/iobench)
+
 `iobench2` is a small open/write/close benchmarking utility for parallel writes on an arbitrary filesystem.
 
 The program forks `N` children, that each open a file, write `n` times a random block of bytes, close the file and report the stats to the parent process.
